@@ -521,43 +521,48 @@
         return 'large';
     }
     
-    function getRecoveryTime(exerciseCard) {
-        // Get the recovery time from the exercise card text
-        const smallElements = exerciseCard.querySelectorAll('p small');
-        let recoveryTime = 90; // Default to 1:30 min
-        
-        smallElements.forEach(element => {
-            if (element.textContent.includes("Recupero:")) {
-                const recoveryText = element.textContent;
-                if (recoveryText.includes("2 minuti")) {
-                    recoveryTime = 120;
-                } else if (recoveryText.includes("1:30")) {
-                    recoveryTime = 90;
-                } else if (recoveryText.includes("1 minuto")) {
-                    recoveryTime = 60;
-                }
-            }
-        });
-        
-        // Special case for abs circuits
-        if (exerciseCard.id === 'abs-circuit-1' || exerciseCard.id === 'abs-circuit-2') {
-            return 60; // 1 min for abs
-        }
-        
-        // If no recovery time found, use default based on exercise type
-        if (recoveryTime === 90) {
-            const exerciseType = getExerciseType(exerciseCard);
-            if (exerciseType === 'abs') {
-                recoveryTime = 60; // 1 min for abs
-            } else if (exerciseType === 'large') {
-                recoveryTime = 120; // 2 min for large muscle groups
-            } else if (exerciseType === 'small') {
-                recoveryTime = 90; // 1:30 min for small muscle groups
-            }
-        }
-        
-        return recoveryTime;
-    }
+	function getRecoveryTime(exerciseCard) {
+	    // Get the recovery time from the exercise card text
+	    const smallElements = exerciseCard.querySelectorAll('p small');
+	    let recoveryTime = 90; // Default to 1:30 min
+	    
+	    smallElements.forEach(element => {
+	        if (element.textContent.includes("Recupero:")) {
+	            const recoveryText = element.textContent;
+	            if (recoveryText.includes("2 minuti")) {
+	                recoveryTime = 120;
+	            } else if (recoveryText.includes("1:30")) {
+	                recoveryTime = 90;
+	            } else if (recoveryText.includes("1 minuto")) {
+	                recoveryTime = 60;
+	            }
+	        }
+	    });
+	    
+	    // Special case for Push down exercise
+	    if (exerciseCard.querySelector('h3')?.textContent.includes("Push down")) {
+	        recoveryTime = 90; // 1:30 minutes
+	    }
+	    
+	    // Special case for abs circuits
+	    if (exerciseCard.id === 'abs-circuit-1' || exerciseCard.id === 'abs-circuit-2') {
+	        return 60; // 1 min for abs
+	    }
+	    
+	    // If no recovery time found, use default based on exercise type
+	    if (recoveryTime === 90) {
+	        const exerciseType = getExerciseType(exerciseCard);
+	        if (exerciseType === 'abs') {
+	            recoveryTime = 60; // 1 min for abs
+	        } else if (exerciseType === 'large') {
+	            recoveryTime = 120; // 2 min for large muscle groups
+	        } else if (exerciseType === 'small') {
+	            recoveryTime = 90; // 1:30 min for small muscle groups
+	        }
+	    }
+	    
+	    return recoveryTime;
+	}
     
     class TotalWorkoutTimer {
         constructor() {
@@ -664,7 +669,11 @@
 	    const exerciseTitle = exerciseCard.querySelector('h3').textContent;
 	    const exerciseKey = `exercise_${exerciseTitle}`;
 	    const isAbWorkout = exerciseTitle.includes('ADDOMINALI');
-	    
+		
+	    // For abs circuits, ensure we have max series set correctly
+	    if (isAbWorkout && (!maxSeries || maxSeries === 0)) {
+	        maxSeries = 3; // Default to 3 series for abs circuits
+	    }
 	    // Load the saved state with default values if none exists
 	    const savedState = StorageManager.get(exerciseKey, {
 	        currentSeries: 0,
@@ -884,18 +893,23 @@
 	}
 	
 	document.addEventListener('DOMContentLoaded', () => {
-	    const totalWorkoutTimer = new TotalWorkoutTimer();
-	    
-	    const exerciseCards = document.querySelectorAll('.exercise-card');
+    const totalWorkoutTimer = new TotalWorkoutTimer();
+    
+    const exerciseCards = document.querySelectorAll('.exercise-card');
 	    exerciseCards.forEach(card => {
-	        const seriesText = card.querySelector('p')?.textContent;
-	        if (seriesText) {
-	            // Estrae il numero di serie dal formato "4x12" o simili
-	            const seriesMatch = seriesText.match(/(\d+)x/);
-	            if (seriesMatch && seriesMatch[1]) {
-	                const maxSeries = parseInt(seriesMatch[1]);
-	                if (!isNaN(maxSeries)) {
-	                    createSeriesTracker(card, maxSeries);
+	        // Special handling for abs circuits
+	        if (card.id === 'abs-circuit-1' || card.id === 'abs-circuit-2') {
+	            createSeriesTracker(card, 3); // Always 3 series for abs circuits
+	        } else {
+	            const seriesText = card.querySelector('p')?.textContent;
+	            if (seriesText) {
+	                // Extracts the number of series from formats like "4x12"
+	                const seriesMatch = seriesText.match(/(\d+)x/);
+	                if (seriesMatch && seriesMatch[1]) {
+	                    const maxSeries = parseInt(seriesMatch[1]);
+	                    if (!isNaN(maxSeries)) {
+	                        createSeriesTracker(card, maxSeries);
+	                    }
 	                }
 	            }
 	        }
