@@ -1208,7 +1208,7 @@
 	        const exerciseTitle = card.querySelector('h3')?.textContent;
 	        
 	        // Gestione speciale per i circuiti addominali
-	        if (exerciseTitle && exerciseTitle.includes('ADDOMINALI')) {
+	        if (card.id === 'abs-circuit-1') {
 	            createAbsCircuitTracker(card);
 	            return;
 	        }
