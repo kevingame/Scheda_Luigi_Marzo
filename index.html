@@ -807,8 +807,11 @@
 	        const timerControls = document.createElement('div');
 	        timerControls.className = 'timer-controls';
 	        
-	        const startWorkoutButton = document.createElement('button');
-	        startWorkoutButton.textContent = 'Inizia 2min';
+	        if (exerciseCard.id === 'abs-circuit-2') {
+		     startWorkoutButton.textContent = 'Inizia Serie';
+		} else {
+	             startWorkoutButton.textContent = 'Inizia 2min';
+		}
 	        
 	        const stopWorkoutButton = document.createElement('button');
 	        stopWorkoutButton.textContent = 'Stop';
@@ -829,7 +832,16 @@
 	            let timeElapsed = startTime;
 	            timerDisplay.style.display = 'block';
 	            timerDisplay.classList.add('active-timer');
-	
+			
+		    if (exerciseCard.id === 'abs-circuit-2') {
+		        clearInterval(workoutTimer);
+		        playSound();
+		        startRecoveryTimer(60);
+		        stopWorkoutButton.style.display = 'none';
+		        startWorkoutButton.style.display = 'inline';
+		        return;
+		    }
+			
 	            if (workoutTimer) {
 	                clearInterval(workoutTimer);
 	            }
