@@ -1,1 +1,0 @@
-# Scheda_Luigi
