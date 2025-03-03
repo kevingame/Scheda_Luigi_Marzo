@@ -499,7 +499,14 @@
 	}, { once: true });
 	
 	function getExerciseType(exerciseCard) {
-	    const title = exerciseCard.closest('.exercises-grid')?.previousElementSibling?.textContent.toUpperCase() || '';
+	    const section = exerciseCard.closest('.exercises-grid');
+	    if (!section) return 'large';
+	    
+	    const header = section.previousElementSibling;
+	    if (!header) return 'large';
+	    
+	    const title = header.textContent.toUpperCase();
+	    
 	    if (title.includes('PETTO') || title.includes('GAMBE') || title.includes('SPALLE') || title.includes('DORSO')) {
 	        return 'large';
 	    } else if (title.includes('TRICIPITI') || title.includes('BICIPITI')) {
@@ -511,27 +518,36 @@
 	}
 	
 	function getRecoveryTime(exerciseCard) {
-	    // Get the recovery time from the exercise card
-	    const recoveryText = exerciseCard.querySelector('p small:contains("Recupero:")');
-	    if (recoveryText) {
-	        const recoveryTimeText = recoveryText.textContent;
-	        if (recoveryTimeText.includes("2 minuti")) {
-	            return 120;
-	        } else if (recoveryTimeText.includes("1:30")) {
-	            return 90;
-	        } else if (recoveryTimeText.includes("1 minuto")) {
-	            return 60;
+	    // Get the recovery time from the exercise card text
+	    const smallElements = exerciseCard.querySelectorAll('p small');
+	    let recoveryTime = 90; // Default to 1:30 min
+	    
+	    smallElements.forEach(element => {
+	        if (element.textContent.includes("Recupero:")) {
+	            const recoveryText = element.textContent;
+	            if (recoveryText.includes("2 minuti")) {
+	                recoveryTime = 120;
+	            } else if (recoveryText.includes("1:30")) {
+	                recoveryTime = 90;
+	            } else if (recoveryText.includes("1 minuto")) {
+	                recoveryTime = 60;
+	            }
+	        }
+	    });
+	    
+	    // If no recovery time found, use default based on exercise type
+	    if (recoveryTime === 90) {
+	        const exerciseType = getExerciseType(exerciseCard);
+	        if (exerciseType === 'abs') {
+	            recoveryTime = 60; // 1 min for abs
+	        } else if (exerciseType === 'large') {
+	            recoveryTime = 120; // 2 min for large muscle groups
+	        } else if (exerciseType === 'small') {
+	            recoveryTime = 90; // 1:30 min for small muscle groups
 	        }
 	    }
 	    
-	    // Fallback recovery times based on exercise type
-	    const exerciseType = getExerciseType(exerciseCard);
-	    switch (exerciseType) {
-	        case 'abs':
-	            return 60; // 1 min for abs
-	        default:
-	            return 90; // Default to 1:30 if not specified
-	    }
+	    return recoveryTime;
 	}
 	
 	class TotalWorkoutTimer {
@@ -548,7 +564,7 @@
 	            this.startButton = document.createElement('button');
 	            this.startButton.id = 'start-total-timer';
 	            this.startButton.textContent = 'Avvia Allenamento';
-	            this.resetButton.parentNode.insertBefore(this.startButton, this.resetButton);
+	            document.querySelector('.total-workout-timer').insertBefore(this.startButton, this.resetButton);
 	        }
 	
 	        this.resetButton.style.backgroundColor = '#f44336';
@@ -650,8 +666,8 @@
 	        isTimerRunning: false
 	    });
 	
-	    const exerciseType = getExerciseType(exerciseCard);
-	    const recoveryTime = getRecoveryTime(exerciseType);
+	    // Get recovery time based on exercise type
+	    const recoveryTime = getRecoveryTime(exerciseCard);
 	    
 	    const counterDiv = document.createElement('div');
 	    counterDiv.className = 'series-counter';
@@ -665,6 +681,7 @@
 	    
 	    const timerDisplay = document.createElement('div');
 	    timerDisplay.className = 'timer-display';
+	    timerDisplay.style.display = 'none';
 	    
 	    // Initialize currentSeries from savedState
 	    let currentSeries = parseInt(savedState.currentSeries) || 0;
@@ -864,9 +881,13 @@
 	    exerciseCards.forEach(card => {
 	        const seriesText = card.querySelector('p')?.textContent;
 	        if (seriesText) {
-	            const maxSeries = parseInt(seriesText.split('x')[0]);
-	            if (!isNaN(maxSeries)) {
-	                createSeriesTracker(card, maxSeries);
+	            // Estrae il numero di serie dal formato "4x12" o simili
+	            const seriesMatch = seriesText.match(/(\d+)x/);
+	            if (seriesMatch && seriesMatch[1]) {
+	                const maxSeries = parseInt(seriesMatch[1]);
+	                if (!isNaN(maxSeries)) {
+	                    createSeriesTracker(card, maxSeries);
+	                }
 	            }
 	        }
 	    });
