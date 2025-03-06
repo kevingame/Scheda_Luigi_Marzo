@@ -487,11 +487,40 @@
 	    return 'large';
 	}
 	
-	function getRecoveryTime(exerciseType) {
+	function getRecoveryTime(exerciseType, exerciseTitle) {
+	    // Tempi specifici per ogni esercizio
+	    if (exerciseTitle.includes('Panca piana con bilanciere')) return 120;
+	    if (exerciseTitle.includes('Apertura su panca inclinata')) return 120;
+	    if (exerciseTitle.includes('Panca inclinata con bilanciere')) return 120;
+	    if (exerciseTitle.includes('Cavi bassi')) return 60;
+	    if (exerciseTitle.includes('Push down')) return 90;
+	    if (exerciseTitle.includes('Estensione su panca')) return 60;
+	    if (exerciseTitle.includes('Manubrio dietro la testa')) return 60;
+	    
+	    if (exerciseTitle.includes('Squat con bilanciere')) return 120;
+	    if (exerciseTitle.includes('Affondi con manubrio')) return 90;
+	    if (exerciseTitle.includes('Mezzi stacchi')) return 90;
+	    if (exerciseTitle.includes('Leg extension')) return 90;
+	    if (exerciseTitle.includes('Leg press')) return 90;
+	    if (exerciseTitle.includes('Shoulder press')) return 120;
+	    if (exerciseTitle.includes('Alzate laterali')) return 90;
+	    if (exerciseTitle.includes('Military press')) return 120;
+	    if (exerciseTitle.includes('Scrollate')) return 90;
+	    
+	    if (exerciseTitle.includes('Lat-machine') && !exerciseTitle.includes('inversa')) return 120;
+	    if (exerciseTitle.includes('Lat-machine inversa')) return 90;
+	    if (exerciseTitle.includes('Rematore con bilanciere')) return 120;
+	    if (exerciseTitle.includes('Pulley basso')) return 90;
+	    if (exerciseTitle.includes('Curl con bilanciere')) return 120;
+	    if (exerciseTitle.includes('Curl martello')) return 90;
+	    if (exerciseTitle.includes('Curl cavi bassi')) return 90;
+	    
+	    // Default values based on muscle group if no specific match
 	    switch (exerciseType) {
 	        case 'large':
-	            return 90;
+	            return 120;
 	        case 'small':
+	            return 90;
 	        case 'abs':
 	            return 60;
 	        default:
@@ -618,14 +647,20 @@
 	    });
 	
 	    const exerciseType = getExerciseType(exerciseCard);
-	    const recoveryTime = getRecoveryTime(exerciseType);
+	    const recoveryTime = getRecoveryTime(exerciseType, exerciseTitle);
 	    
 	    const counterDiv = document.createElement('div');
 	    counterDiv.className = 'series-counter';
 	
 	    const exerciseTypeDiv = document.createElement('div');
 	    exerciseTypeDiv.className = 'exercise-type';
-	    exerciseTypeDiv.textContent = `Recupero: ${recoveryTime/60} minuti`;
+	    if (recoveryTime % 60 === 0) {
+	        exerciseTypeDiv.textContent = `Recupero: ${recoveryTime/60} minuti`;
+	    } else {
+	       const minutes = Math.floor(recoveryTime/60);
+	       const seconds = recoveryTime % 60;
+	       exerciseTypeDiv.textContent = `Recupero: ${minutes}.${seconds} minuti`;
+	    }
 	    
 	    const counterDisplay = document.createElement('div');
 	    counterDisplay.className = 'counter-display';
