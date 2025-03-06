@@ -155,7 +155,7 @@
             }
         }
 
-        .total-workout-timer {
+	.total-workout-timer {
             position: fixed;
             bottom: 20px;
             right: 20px;
@@ -232,11 +232,11 @@
             </div>
         </div>
 
-        <div class="exercise-card" id="abs-circuit-1">
+        <div class="exercise-card">
             <h3>CIRCUITO DI ADDOMINALI</h3>
-            <p>3x30 sec per ogni esercizio</p>
+            <p>3x30 sec per ogni esercizio, 1 min rec.</p>
             <p>Elbow plank, Full planck, Side plank.</p>
-            <img src="https://raw.githubusercontent.com/kevingame/Scheda_Luigi_Marzo/main/plank.jpg" alt="plank" style="width: 300px; height: auto;">
+            <img src="https://raw.githubusercontent.com/kevingame/Scheda_Luigi/main/plank.jpg" alt="plank" style="width: 300px; height: auto;">
         </div>
 
         <h2>Giorno 2 - Gambe e Spalle</h2>
@@ -354,18 +354,19 @@
                 <img src="https://raw.githubusercontent.com/kevingame/Scheda_Luigi_Marzo/main/Curl-cavi-bassi-bilanciere.jpg" alt="Curl cavi bassi" style="width: 250px; height: auto;">
             </div>
         </div>
-
-        <div class="exercise-card" id="abs-circuit-2">
+	    
+        <div class="exercise-card">
             <h3>CIRCUITO DI ADDOMINALI</h3>
-            <p>3x10 sit up, 20 Crunch laterale alle Caviglie, 10 dragon flag</p>
+            <p>3 x 10 sit up, 20 Crunch laterale alle Caviglie, 10 dragon flag</p>
+            <p>1 min rec.</p>
             <img src="https://raw.githubusercontent.com/kevingame/Scheda_Luigi_Marzo/main/Addominali-circuito.jpg" alt="Addominali circuito" style="width: 300px; height: auto;">
         </div>
 
         <div class="notes">
             <h3>Note Finali</h3>
             <ul>
-                <li><strong>Riposo tra le serie:</strong> Rispettare i tempi di recupero indicati per ogni esercizio.</li>
-                <li><strong>Progressione:</strong> Per gli esercizi con serie 12,10,8,6, aumentare il peso del 10% solo nelle serie 10, 8 e 6.</li>
+                <li><strong>Riposo tra le serie:</strong> 60-90 secondi per i gruppi muscolari grandi; 45-60 secondi per quelli piccoli.</li>
+                <li><strong>Progressione:</strong> Aumenta il peso ogni 2-3 settimane, mantenendo una buona forma.</li>
                 <li><strong>Recupero:</strong> Dormi 7-8 ore e segui la dieta per ottimizzare la crescita muscolare.</li>
                 <li><strong>Stretching dinamico:</strong> Prima dell'allenamento per attivare i muscoli; statico a fine sessione.</li>
             </ul>
@@ -380,7 +381,7 @@
     <audio id="timer-sound" playsinline preload="auto">
         <source src="https://raw.githubusercontent.com/kevingame/Scheda_Luigi/main/alarm.mp3" type="audio/mpeg">
     </audio>
-    
+	
     <script>
 	// Utility function for local storage management with error handling
 	const StorageManager = {
@@ -474,490 +475,27 @@
 	    document.removeEventListener('touchstart', initAudio);
 	}, { once: true });
 	
-	function createPlankCircuitTracker(exerciseCard) {
-	    const exerciseTitle = exerciseCard.querySelector('h3').textContent;
-	    const exerciseKey = `exercise_${exerciseTitle}`;
-	    
-	    // Carica lo stato salvato
-	    const savedState = StorageManager.get(exerciseKey, {
-	        currentSeries: 0,
-	        isRecoveryActive: false,
-	        recoveryTimeLeft: 0,
-	        exerciseTimeElapsed: 0,
-	        timerDisplayVisible: false,
-	        isTimerRunning: false
-	    });
-	    
-	    // Recupero fisso di 1 minuto per addominali
-	    const recoveryTime = 60;
-	    
-	    const counterDiv = document.createElement('div');
-	    counterDiv.className = 'series-counter';
-	    
-	    const exerciseTypeDiv = document.createElement('div');
-	    exerciseTypeDiv.className = 'exercise-type';
-	    exerciseTypeDiv.textContent = `Recupero: 1 minuto`;
-	    
-	    const counterDisplay = document.createElement('div');
-	    counterDisplay.className = 'counter-display';
-	    
-	    const timerDisplay = document.createElement('div');
-	    timerDisplay.className = 'timer-display';
-	    timerDisplay.style.display = savedState.timerDisplayVisible ? 'block' : 'none';
-	    
-	    // Inizializza currentSeries da savedState
-	    let currentSeries = parseInt(savedState.currentSeries) || 0;
-	    const maxSeries = 3; // Tutti i circuiti addominali sono 3 serie
-	    counterDisplay.textContent = `Serie: ${currentSeries}/${maxSeries}`;
-	    
-	    const addButton = document.createElement('button');
-	    addButton.textContent = '+ Serie';
-	    addButton.disabled = currentSeries >= maxSeries;
-	    
-	    const resetButton = document.createElement('button');
-	    resetButton.textContent = 'Reset';
-	    resetButton.className = 'reset-button';
-	    
-	    const timerControls = document.createElement('div');
-	    timerControls.className = 'timer-controls';
-	    
-	    const startExerciseButton = document.createElement('button');
-	    startExerciseButton.textContent = 'Inizia 2min';
-	    
-	    const stopExerciseButton = document.createElement('button');
-	    stopExerciseButton.textContent = 'Stop';
-	    stopExerciseButton.style.display = 'none';
-	    
-	    let timerInterval;
-	    let exerciseTimer;
-	    
-	    // Ripristina lo stato del timer se era attivo
-	    if (savedState.isRecoveryActive && savedState.recoveryTimeLeft > 0) {
-	        timerDisplay.style.display = 'block';
-	        startRecoveryTimer(savedState.recoveryTimeLeft);
-	    } else if (savedState.isTimerRunning && savedState.exerciseTimeElapsed > 0) {
-	        timerDisplay.style.display = 'block';
-	        startExerciseButton.style.display = 'none';
-	        stopExerciseButton.style.display = 'inline';
-	        startExerciseTimer(savedState.exerciseTimeElapsed);
-	    }
-	    
-	    function startRecoveryTimer(duration) {
-	        let timeLeft = duration;
-	        timerDisplay.style.display = 'block';
-	        timerDisplay.classList.add('active-timer');
-	        
-	        if (timerInterval) {
-	            clearInterval(timerInterval);
-	        }
-	        
-	        timerInterval = setInterval(() => {
-	            if (timeLeft <= 0) {
-	                clearInterval(timerInterval);
-	                playSound();
-	                timerDisplay.textContent = 'Recupero completato!';
-	                
-	                StorageManager.set(exerciseKey, {
-	                    currentSeries: currentSeries,
-	                    isRecoveryActive: false,
-	                    recoveryTimeLeft: 0,
-	                    timerDisplayVisible: true
-	                });
-	                return;
-	            }
-	            
-	            const minutes = Math.floor(timeLeft / 60);
-	            const seconds = timeLeft % 60;
-	            timerDisplay.textContent = `Recupero: ${minutes}:${seconds.toString().padStart(2, '0')}`;
-	            timeLeft--;
-	            
-	            StorageManager.set(exerciseKey, {
-	                currentSeries: currentSeries,
-	                isRecoveryActive: true,
-	                recoveryTimeLeft: timeLeft,
-	                timerDisplayVisible: true
-	            });
-	        }, 1000);
-	        
-	        return timerInterval;
-	    }
-	    
-	    function startExerciseTimer(startTime = 0) {
-	        let timeElapsed = startTime;
-	        timerDisplay.style.display = 'block';
-	        timerDisplay.classList.add('active-timer');
-	        
-	        if (exerciseTimer) {
-	            clearInterval(exerciseTimer);
-	        }
-	        
-	        exerciseTimer = setInterval(() => {
-	            const minutes = Math.floor(timeElapsed / 60);
-	            const seconds = timeElapsed % 60;
-	            timerDisplay.textContent = `Tempo: ${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-	            
-	            // Controlla se sono passati 2 minuti (120 secondi)
-	            if (timeElapsed >= 120) {
-	                clearInterval(exerciseTimer);
-	                playSound();
-	                timerDisplay.textContent = 'Tempo completato!';
-	                stopExerciseButton.style.display = 'none';
-	                startExerciseButton.style.display = 'inline';
-	                
-	                // Avvia il timer di recupero
-	                startRecoveryTimer(recoveryTime);
-	                
-	                StorageManager.set(exerciseKey, {
-	                    currentSeries: currentSeries,
-	                    isTimerRunning: false,
-	                    exerciseTimeElapsed: 0,
-	                    isRecoveryActive: true,
-	                    recoveryTimeLeft: recoveryTime,
-	                    timerDisplayVisible: true
-	                });
-	                return;
-	            }
-	            
-	            timeElapsed++;
-	            StorageManager.set(exerciseKey, {
-	                currentSeries: currentSeries,
-	                exerciseTimeElapsed: timeElapsed,
-	                isTimerRunning: true,
-	                timerDisplayVisible: true
-	            });
-	        }, 1000);
-	        
-	        return exerciseTimer;
-	    }
-	    
-	    addButton.addEventListener('click', () => {
-	        if (currentSeries < maxSeries) {
-	            currentSeries++;
-	            counterDisplay.textContent = `Serie: ${currentSeries}/${maxSeries}`;
-	            addButton.disabled = currentSeries >= maxSeries;
-	            
-	            // Stop exercise timer if running
-	            if (exerciseTimer) {
-	                clearInterval(exerciseTimer);
-	                stopExerciseButton.style.display = 'none';
-	                startExerciseButton.style.display = 'inline';
-	            }
-	            
-	            StorageManager.set(exerciseKey, {
-	                currentSeries: currentSeries,
-	                isRecoveryActive: true,
-	                recoveryTimeLeft: recoveryTime,
-	                isTimerRunning: false,
-	                exerciseTimeElapsed: 0,
-	                timerDisplayVisible: true
-	            });
-	            
-	            startRecoveryTimer(recoveryTime);
-	        }
-	    });
-	    
-	    resetButton.addEventListener('click', () => {
-	        currentSeries = 0;
-	        counterDisplay.textContent = `Serie: ${currentSeries}/${maxSeries}`;
-	        addButton.disabled = false;
-	        timerDisplay.style.display = 'none';
-	        timerDisplay.classList.remove('active-timer');
-	        
-	        if (timerInterval) {
-	            clearInterval(timerInterval);
-	        }
-	        if (exerciseTimer) {
-	            clearInterval(exerciseTimer);
-	        }
-	        
-	        stopExerciseButton.style.display = 'none';
-	        startExerciseButton.style.display = 'inline';
-	        
-	        StorageManager.set(exerciseKey, {
-	            currentSeries: 0,
-	            isRecoveryActive: false,
-	            recoveryTimeLeft: 0,
-	            exerciseTimeElapsed: 0,
-	            timerDisplayVisible: false,
-	            isTimerRunning: false
-	        });
-	    });
-	    
-	    startExerciseButton.addEventListener('click', () => {
-	        if (timerInterval) {
-	            clearInterval(timerInterval);
-	        }
-	        startExerciseButton.style.display = 'none';
-	        stopExerciseButton.style.display = 'inline';
-	        startExerciseTimer();
-	    });
-	    
-	    stopExerciseButton.addEventListener('click', () => {
-	        if (exerciseTimer) {
-	            clearInterval(exerciseTimer);
-	        }
-	        stopExerciseButton.style.display = 'none';
-	        startExerciseButton.style.display = 'inline';
-	        
-	        StorageManager.set(exerciseKey, {
-	            currentSeries: currentSeries,
-	            isTimerRunning: false,
-	            exerciseTimeElapsed: 0
-	        });
-	        
-	        startRecoveryTimer(recoveryTime);
-	    });
-	    
-	    timerControls.appendChild(startExerciseButton);
-	    timerControls.appendChild(stopExerciseButton);
-	    
-	    counterDiv.appendChild(exerciseTypeDiv);
-	    counterDiv.appendChild(counterDisplay);
-	    counterDiv.appendChild(timerDisplay);
-	    counterDiv.appendChild(timerControls);
-	    counterDiv.appendChild(addButton);
-	    counterDiv.appendChild(resetButton);
-	    
-	    exerciseCard.appendChild(counterDiv);
-	}
-	
-	function createRepCircuitTracker(exerciseCard) {
-	    const exerciseTitle = exerciseCard.querySelector('h3').textContent;
-	    const exerciseKey = `exercise_${exerciseTitle}`;
-	    
-	    // Carica lo stato salvato
-	    const savedState = StorageManager.get(exerciseKey, {
-	        currentSeries: 0,
-	        isRecoveryActive: false,
-	        recoveryTimeLeft: 0,
-	        timerDisplayVisible: false
-	    });
-	    
-	    // Recupero fisso di 1 minuto per addominali
-	    const recoveryTime = 60;
-	    
-	    const counterDiv = document.createElement('div');
-	    counterDiv.className = 'series-counter';
-	    
-	    const exerciseTypeDiv = document.createElement('div');
-	    exerciseTypeDiv.className = 'exercise-type';
-	    exerciseTypeDiv.textContent = `Recupero: 1 minuto`;
-	    
-	    const counterDisplay = document.createElement('div');
-	    counterDisplay.className = 'counter-display';
-	    
-	    const timerDisplay = document.createElement('div');
-	    timerDisplay.className = 'timer-display';
-	    timerDisplay.style.display = savedState.timerDisplayVisible ? 'block' : 'none';
-	    
-	    // Inizializza currentSeries da savedState
-	    let currentSeries = parseInt(savedState.currentSeries) || 0;
-	    const maxSeries = 3; // Tutti i circuiti addominali sono 3 serie
-	    counterDisplay.textContent = `Serie: ${currentSeries}/${maxSeries}`;
-	    
-	    const addButton = document.createElement('button');
-	    addButton.textContent = '+ Serie';
-	    addButton.disabled = currentSeries >= maxSeries;
-	    
-	    const resetButton = document.createElement('button');
-	    resetButton.textContent = 'Reset';
-	    resetButton.className = 'reset-button';
-	    
-	    let timerInterval;
-	    
-	    // Ripristina lo stato del timer se era attivo
-	    if (savedState.isRecoveryActive && savedState.recoveryTimeLeft > 0) {
-	        timerDisplay.style.display = 'block';
-	        startRecoveryTimer(savedState.recoveryTimeLeft);
-	    }
-	    
-	    function startRecoveryTimer(duration) {
-	        let timeLeft = duration;
-	        timerDisplay.style.display = 'block';
-	        timerDisplay.classList.add('active-timer');
-	        
-	        if (timerInterval) {
-	            clearInterval(timerInterval);
-	        }
-	        
-	        timerInterval = setInterval(() => {
-	            if (timeLeft <= 0) {
-	                clearInterval(timerInterval);
-	                playSound();
-	                timerDisplay.textContent = 'Recupero completato!';
-	                
-	                StorageManager.set(exerciseKey, {
-	                    currentSeries: currentSeries,
-	                    isRecoveryActive: false,
-	                    recoveryTimeLeft: 0,
-	                    timerDisplayVisible: true
-	                });
-	                return;
-	            }
-	            
-	            const minutes = Math.floor(timeLeft / 60);
-	            const seconds = timeLeft % 60;
-	            timerDisplay.textContent = `Recupero: ${minutes}:${seconds.toString().padStart(2, '0')}`;
-	            timeLeft--;
-	            
-	            StorageManager.set(exerciseKey, {
-	                currentSeries: currentSeries,
-	                isRecoveryActive: true,
-	                recoveryTimeLeft: timeLeft,
-	                timerDisplayVisible: true
-	            });
-	        }, 1000);
-	        
-	        return timerInterval;
-	    }
-	    
-	    addButton.addEventListener('click', () => {
-	        if (currentSeries < maxSeries) {
-	            currentSeries++;
-	            counterDisplay.textContent = `Serie: ${currentSeries}/${maxSeries}`;
-	            addButton.disabled = currentSeries >= maxSeries;
-	            
-	            StorageManager.set(exerciseKey, {
-	                currentSeries: currentSeries,
-	                isRecoveryActive: true,
-	                recoveryTimeLeft: recoveryTime,
-	                timerDisplayVisible: true
-	            });
-	            
-	            startRecoveryTimer(recoveryTime);
-	        }
-	    });
-	    
-	    resetButton.addEventListener('click', () => {
-	        currentSeries = 0;
-	        counterDisplay.textContent = `Serie: ${currentSeries}/${maxSeries}`;
-	        addButton.disabled = false;
-	        timerDisplay.style.display = 'none';
-	        timerDisplay.classList.remove('active-timer');
-	        
-	        if (timerInterval) {
-	            clearInterval(timerInterval);
-	        }
-	        
-	        StorageManager.set(exerciseKey, {
-	            currentSeries: 0,
-	            isRecoveryActive: false,
-	            recoveryTimeLeft: 0,
-	            timerDisplayVisible: false
-	        });
-	    });
-	    
-	    counterDiv.appendChild(exerciseTypeDiv);
-	    counterDiv.appendChild(counterDisplay);
-	    counterDiv.appendChild(timerDisplay);
-	    counterDiv.appendChild(addButton);
-	    counterDiv.appendChild(resetButton);
-	    
-	    exerciseCard.appendChild(counterDiv);
-	}
-	
 	function getExerciseType(exerciseCard) {
-	    const exerciseTitle = exerciseCard.querySelector('h3')?.textContent.trim();
-	    
-	    // Gestione esplicita per i circuiti addominali
-	    if (exerciseTitle && exerciseTitle.includes('ADDOMINALI') || 
-	        exerciseCard.id === 'abs-circuit-1' || 
-	        exerciseCard.id === 'abs-circuit-2') {
+	    const title = exerciseCard.closest('.exercises-grid')?.previousElementSibling?.textContent.toUpperCase() || '';
+	    if (title.includes('PETTO') || title.includes('GAMBE') || title.includes('SPALLE') || title.includes('DORSO')) {
+	        return 'large';
+	    } else if (title.includes('TRICIPITI') || title.includes('BICIPITI')) {
+	        return 'small';
+	    } else if (exerciseCard.querySelector('h3')?.textContent.includes('ADDOMINALI')) {
 	        return 'abs';
 	    }
-	    
-	    const section = exerciseCard.closest('.exercises-grid');
-	    if (!section) {
-	        return 'large'; // Default per sicurezza
-	    }
-	    
-	    const header = section.previousElementSibling;
-	    if (!header) return 'large';
-	    
-	    const headerText = header.textContent.toUpperCase().trim();
-	    
-	    if (headerText.includes('PETTO') || 
-	        headerText.includes('GAMBE') || 
-	        headerText.includes('SPALLE') || 
-	        headerText.includes('DORSO')) {
-	        return 'large';
-	    } else if (headerText.includes('TRICIPITI') || 
-	               headerText.includes('BICIPITI')) {
-	        return 'small';
-	    }
-	    
-	    return 'large'; // Default per sicurezza
+	    return 'large';
 	}
 	
-	function getRecoveryTime(exerciseCard) {
-	    // Identificare il tipo di esercizio
-	    const exerciseTitle = exerciseCard.querySelector('h3').textContent.trim();
-	    const exerciseType = getExerciseType(exerciseCard);
-	    
-	    // Circuiti addominali hanno sempre 1 minuto di recupero
-	    if (exerciseTitle.includes('ADDOMINALI') || exerciseCard.id === 'abs-circuit-1' || exerciseCard.id === 'abs-circuit-2') {
-	        return 60; // 1 minuto di recupero
-	    }
-	    
-	    // Recuperi per ogni gruppo muscolare
-	    if (exerciseTitle.includes('Panca piana con bilanciere') || 
-	        exerciseTitle.includes('Apertura su panca inclinata') || 
-	        exerciseTitle.includes('Panca inclinata con bilanciere')) {
-	        return 120; // 2 minuti
-	    } else if (exerciseTitle.includes('Cavi bassi')) {
-	        return 60; // 1 minuto
-	    }
-	    
-	    // Tricipiti
-	    else if (exerciseTitle.includes('Push down')) {
-	        return 90; // 1:30 minuti
-	    } else if (exerciseTitle.includes('Estensione su panca') || 
-	               exerciseTitle.includes('Manubrio dietro la testa')) {
-	        return 60; // 1 minuto
-	    }
-	    
-	    // Gambe
-	    else if (exerciseTitle.includes('Squat con bilanciere')) {
-	        return 120; // 2 minuti
-	    } else if (exerciseTitle.includes('Affondi') || 
-	               exerciseTitle.includes('Mezzi stacchi') || 
-	               exerciseTitle.includes('Leg extension') || 
-	               exerciseTitle.includes('Leg press')) {
-	        return 90; // 1:30 minuti
-	    }
-	    
-	    // Spalle
-	    else if (exerciseTitle.includes('Shoulder press') || 
-	             exerciseTitle.includes('Military press')) {
-	        return 120; // 2 minuti
-	    } else if (exerciseTitle.includes('Alzate laterali') || 
-	               exerciseTitle.includes('Scrollate')) {
-	        return 90; // 1:30 minuti
-	    }
-	    
-	    // Dorso
-	    else if (exerciseTitle.includes('Lat-machine') && !exerciseTitle.includes('inversa')) {
-	        return 120; // 2 minuti
-	    } else if (exerciseTitle.includes('Lat-machine inversa') || 
-	               exerciseTitle.includes('Pulley')) {
-	        return 90; // 1:30 minuti
-	    } else if (exerciseTitle.includes('Rematore')) {
-	        return 120; // 2 minuti
-	    }
-	    
-	    // Bicipiti
-	    else if (exerciseTitle.includes('Curl con bilanciere')) {
-	        return 120; // 2 minuti
-	    } else if (exerciseTitle.includes('Curl martello') || 
-	               exerciseTitle.includes('Curl cavi')) {
-	        return 90; // 1:30 minuti
-	    }
-	    
-	    // Default per altri esercizi in base al gruppo muscolare
-	    if (exerciseType === 'large') {
-	        return 120; // 2 minuti per gruppi muscolari grandi
-	    } else {
-	        return 90; // 1:30 minuti per gruppi muscolari piccoli
+	function getRecoveryTime(exerciseType) {
+	    switch (exerciseType) {
+	        case 'large':
+	            return 90;
+	        case 'small':
+	        case 'abs':
+	            return 60;
+	        default:
+	            return 90;
 	    }
 	}
 	
@@ -975,7 +513,7 @@
 	            this.startButton = document.createElement('button');
 	            this.startButton.id = 'start-total-timer';
 	            this.startButton.textContent = 'Avvia Allenamento';
-	            document.querySelector('.total-workout-timer').insertBefore(this.startButton, this.resetButton);
+	            this.resetButton.parentNode.insertBefore(this.startButton, this.resetButton);
 	        }
 	
 	        this.resetButton.style.backgroundColor = '#f44336';
@@ -1065,6 +603,7 @@
 	function createSeriesTracker(exerciseCard, maxSeries) {
 	    const exerciseTitle = exerciseCard.querySelector('h3').textContent;
 	    const exerciseKey = `exercise_${exerciseTitle}`;
+	    const isAbWorkout = exerciseTitle.includes('ADDOMINALI');
 	    
 	    // Load the saved state with default values if none exists
 	    const savedState = StorageManager.get(exerciseKey, {
@@ -1076,8 +615,8 @@
 	        isTimerRunning: false
 	    });
 	
-	    // Get recovery time based on exercise type
-	    const recoveryTime = getRecoveryTime(exerciseCard);
+	    const exerciseType = getExerciseType(exerciseCard);
+	    const recoveryTime = getRecoveryTime(exerciseType);
 	    
 	    const counterDiv = document.createElement('div');
 	    counterDiv.className = 'series-counter';
@@ -1091,7 +630,6 @@
 	    
 	    const timerDisplay = document.createElement('div');
 	    timerDisplay.className = 'timer-display';
-	    timerDisplay.style.display = 'none';
 	    
 	    // Initialize currentSeries from savedState
 	    let currentSeries = parseInt(savedState.currentSeries) || 0;
@@ -1106,6 +644,7 @@
 	    resetButton.className = 'reset-button';
 	
 	    let timerInterval;
+	    let workoutTimer;
 	
 	    // Restore timer state if it was active
 	    if (savedState.isRecoveryActive && savedState.recoveryTimeLeft > 0) {
@@ -1180,6 +719,9 @@
 	        if (timerInterval) {
 	            clearInterval(timerInterval);
 	        }
+	        if (workoutTimer) {
+	            clearInterval(workoutTimer);
+	        }
 	
 	        StorageManager.set(exerciseKey, {
 	            currentSeries: 0,
@@ -1190,6 +732,86 @@
 	            isTimerRunning: false
 	        });
 	    });
+	
+	    if (isAbWorkout) {
+	        const timerControls = document.createElement('div');
+	        timerControls.className = 'timer-controls';
+	        
+	        const startWorkoutButton = document.createElement('button');
+	        startWorkoutButton.textContent = 'Inizia 2min';
+	        
+	        const stopWorkoutButton = document.createElement('button');
+	        stopWorkoutButton.textContent = 'Stop';
+	        stopWorkoutButton.style.display = 'none';
+	        
+	        timerControls.appendChild(startWorkoutButton);
+	        timerControls.appendChild(stopWorkoutButton);
+	        counterDiv.appendChild(timerControls);
+	
+	        // Restore ab workout timer state if it was running
+	        if (savedState.isTimerRunning && savedState.workoutTimeElapsed < 120) {
+	            startAbWorkout(savedState.workoutTimeElapsed);
+	            startWorkoutButton.style.display = 'none';
+	            stopWorkoutButton.style.display = 'inline';
+	        }
+	
+	        function startAbWorkout(startTime = 0) {
+	            let timeElapsed = startTime;
+	            timerDisplay.style.display = 'block';
+	            timerDisplay.classList.add('active-timer');
+	
+	            if (workoutTimer) {
+	                clearInterval(workoutTimer);
+	            }
+	
+	            workoutTimer = setInterval(() => {
+	                const minutes = Math.floor(timeElapsed / 60);
+	                const seconds = timeElapsed % 60;
+	                timerDisplay.textContent = `Tempo: ${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+	        
+	                if (timeElapsed >= 120) {
+	                    clearInterval(workoutTimer);
+	                    playSound();
+	                    startRecoveryTimer(60);
+	                    stopWorkoutButton.style.display = 'none';
+	                    startWorkoutButton.style.display = 'inline';
+	                    return;
+	                }
+	                
+	                timeElapsed++;
+	                StorageManager.set(exerciseKey, {
+	                    currentSeries: currentSeries,
+	                    workoutTimeElapsed: timeElapsed,
+	                    isTimerRunning: true,
+	                    timerDisplayVisible: true
+	                });
+	            }, 1000);
+	        }
+	
+	        startWorkoutButton.addEventListener('click', () => {
+	            if (timerInterval) {
+	                clearInterval(timerInterval);
+	            }
+	            startWorkoutButton.style.display = 'none';
+	            stopWorkoutButton.style.display = 'inline';
+	            startAbWorkout();
+	        });
+	        
+	        stopWorkoutButton.addEventListener('click', () => {
+	            if (workoutTimer) {
+	                clearInterval(workoutTimer);
+	            }
+	            stopWorkoutButton.style.display = 'none';
+	            startWorkoutButton.style.display = 'inline';
+	            startRecoveryTimer(60);
+	            
+	            StorageManager.set(exerciseKey, {
+	                currentSeries: currentSeries,
+	                isTimerRunning: false,
+	                workoutTimeElapsed: 0
+	            });
+	        });
+	    }
 	
 	    counterDiv.appendChild(exerciseTypeDiv);
 	    counterDiv.appendChild(counterDisplay);
@@ -1205,23 +827,11 @@
 	    
 	    const exerciseCards = document.querySelectorAll('.exercise-card');
 	    exerciseCards.forEach(card => {
-	        const exerciseTitle = card.querySelector('h3')?.textContent;
-	        
-	        // Gestione speciale per i circuiti addominali
-	        if (card.id === 'abs-circuit-1') {
-	            createAbsCircuitTracker(card);
-	            return;
-	        }
-	        
 	        const seriesText = card.querySelector('p')?.textContent;
 	        if (seriesText) {
-	            // Estrae il numero di serie dal formato "4x12" o simili
-	            const seriesMatch = seriesText.match(/(\d+)x/);
-	            if (seriesMatch && seriesMatch[1]) {
-	                const maxSeries = parseInt(seriesMatch[1]);
-	                if (!isNaN(maxSeries)) {
-	                    createSeriesTracker(card, maxSeries);
-	                }
+	            const maxSeries = parseInt(seriesText.split('x')[0]);
+	            if (!isNaN(maxSeries)) {
+	                createSeriesTracker(card, maxSeries);
 	            }
 	        }
 	    });
