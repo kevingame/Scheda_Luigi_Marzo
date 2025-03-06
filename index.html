@@ -604,6 +604,8 @@
 	    const exerciseTitle = exerciseCard.querySelector('h3').textContent;
 	    const exerciseKey = `exercise_${exerciseTitle}`;
 	    const isAbWorkout = exerciseTitle.includes('ADDOMINALI');
+	    const isGiorno3Ab = isAbWorkout && exerciseTitle.includes('3 x 10 sit up') || exerciseCard.querySelector('p')?.textContent.includes('sit up');
+
 	    
 	    // Load the saved state with default values if none exists
 	    const savedState = StorageManager.get(exerciseKey, {
@@ -733,27 +735,27 @@
 	        });
 	    });
 	
-	    if (isAbWorkout) {
-	        const timerControls = document.createElement('div');
-	        timerControls.className = 'timer-controls';
-	        
-	        const startWorkoutButton = document.createElement('button');
-	        startWorkoutButton.textContent = 'Inizia 2min';
-	        
-	        const stopWorkoutButton = document.createElement('button');
-	        stopWorkoutButton.textContent = 'Stop';
-	        stopWorkoutButton.style.display = 'none';
-	        
-	        timerControls.appendChild(startWorkoutButton);
-	        timerControls.appendChild(stopWorkoutButton);
-	        counterDiv.appendChild(timerControls);
-	
-	        // Restore ab workout timer state if it was running
-	        if (savedState.isTimerRunning && savedState.workoutTimeElapsed < 120) {
-	            startAbWorkout(savedState.workoutTimeElapsed);
-	            startWorkoutButton.style.display = 'none';
-	            stopWorkoutButton.style.display = 'inline';
-	        }
+		if (isAbWorkout && !isGiorno3Ab) {
+		    const timerControls = document.createElement('div');
+		    timerControls.className = 'timer-controls';
+		    
+		    const startWorkoutButton = document.createElement('button');
+		    startWorkoutButton.textContent = 'Inizia 2min';
+		    
+		    const stopWorkoutButton = document.createElement('button');
+		    stopWorkoutButton.textContent = 'Stop';
+		    stopWorkoutButton.style.display = 'none';
+		    
+		    timerControls.appendChild(startWorkoutButton);
+		    timerControls.appendChild(stopWorkoutButton);
+		    counterDiv.appendChild(timerControls);
+		
+		    // Restore ab workout timer state if it was running
+		    if (savedState.isTimerRunning && savedState.workoutTimeElapsed < 120) {
+		        startAbWorkout(savedState.workoutTimeElapsed);
+		        startWorkoutButton.style.display = 'none';
+		        stopWorkoutButton.style.display = 'inline';
+		    }
 	
 	        function startAbWorkout(startTime = 0) {
 	            let timeElapsed = startTime;
@@ -780,10 +782,12 @@
 	                
 	                timeElapsed++;
 	                StorageManager.set(exerciseKey, {
-	                    currentSeries: currentSeries,
-	                    workoutTimeElapsed: timeElapsed,
-	                    isTimerRunning: true,
-	                    timerDisplayVisible: true
+			        currentSeries: currentSeries,
+			        isRecoveryActive: false,
+			        recoveryTimeLeft: 0,
+			        workoutTimeElapsed: 0,
+			        timerDisplayVisible: false,
+			        isTimerRunning: false
 	                });
 	            }, 1000);
 	        }
@@ -811,6 +815,9 @@
 	                workoutTimeElapsed: 0
 	            });
 	        });
+	    }else if (isGiorno3Ab) {
+	        // Per gli addominali del giorno 3, nessun timer speciale
+	        // Solo il contatore delle serie standard
 	    }
 	
 	    counterDiv.appendChild(exerciseTypeDiv);
