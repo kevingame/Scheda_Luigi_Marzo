@@ -603,12 +603,7 @@
 	function createSeriesTracker(exerciseCard, maxSeries) {
 	    const exerciseTitle = exerciseCard.querySelector('h3').textContent;
 	    const exerciseKey = `exercise_${exerciseTitle}`;
-	    
-	    // Verifica se è un esercizio addominale
-	    const isFirstAbWorkout = exerciseTitle.includes('ADDOMINALI') && 
-	                            exerciseCard.querySelector('p')?.textContent.includes('Elbow plank');
-	    const isSecondAbWorkout = exerciseTitle.includes('ADDOMINALI') && 
-	                             !exerciseCard.querySelector('p')?.textContent.includes('Elbow plank');
+	    const isAbWorkout = exerciseTitle.includes('ADDOMINALI');
 	    
 	    // Load the saved state with default values if none exists
 	    const savedState = StorageManager.get(exerciseKey, {
@@ -738,8 +733,7 @@
 	        });
 	    });
 	
-	    // Aggiungi controlli solo per il primo circuito di addominali (quello con Elbow plank)
-	    if (isFirstAbWorkout) {
+	    if (isAbWorkout) {
 	        const timerControls = document.createElement('div');
 	        timerControls.className = 'timer-controls';
 	        
